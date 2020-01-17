@@ -1,0 +1,284 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <malloc.h>
+typedef  struct {
+	char name[20];
+	int generate;
+}Elemtype;
+
+typedef struct CSLinklist{
+    Elemtype data;
+    struct CSLinklist *firstchild,*nextsibling;
+} CSLinklist,*CSTree;
+
+void create(CSTree &bt)      //创建二叉树
+{                                   
+     Elemtype x;
+	 printf("****************成员辈分儿****************：\n");
+	 printf("****************成员姓名****************：\n");
+	 printf("****************输入“0”表示空****************：\n");
+	 scanf("%d",&x.generate);
+	 scanf("%s",&x.name);
+	   bt=(CSLinklist*)malloc(sizeof(CSLinklist)); 
+	   if(strcmp(x.name,"0")==0)
+             bt=NULL;
+	   else 
+	   {
+	          strcpy(bt->data.name, x.name); 
+              bt->data.generate=x.generate;
+              create(bt->firstchild);
+              create(bt->nextsibling);
+	   }
+}
+
+void search(CSTree  &bt)   //查找子孙
+{
+	char mingzi[20];
+    printf("****************输入需要查找的人名****************：\n");
+	scanf("%s",&mingzi);
+    CSTree s[30],p;
+	int top,bools;
+	p=bt;
+	top=0;
+	bools=1;
+	do
+	{
+		while(p!=NULL)
+		{
+			top++;
+			s[top]=p;
+			p=p->firstchild;
+		}
+		if(top==0)
+			bools=0;
+		else
+		{
+			p=s[top];
+			top--;
+		   if(strcmp(p->data.name,mingzi)==0)
+		   {
+			 printf("姓名：%s \n",p->data.name);
+			 printf("辈分儿：%d \n",p->data.generate);
+             printf("查找成功\n");
+		     return;
+		   }
+		     p=p->nextsibling;
+			 if(strcmp(p->data.name,mingzi)==0)
+			 {
+			    printf("姓名：%s \n",p->data.name);
+			    printf("辈分儿：%d \n",p->data.generate);
+                printf("查找成功\n");
+		        return;
+			 }
+		}	
+	}while(bools);
+}
+
+void new_left(CSTree p,Elemtype info)
+{
+    CSTree q=(CSTree)malloc(sizeof(CSLinklist));
+    q->data=info;
+    q->firstchild=q->nextsibling=NULL;
+    p->firstchild=q;
+}
+
+void new_right(CSTree p,Elemtype info)
+{
+    CSTree q=(CSTree)malloc(sizeof(CSLinklist));
+    q->data=info;
+    q->firstchild=q->nextsibling=NULL;
+    p->nextsibling=q;
+}
+
+CSTree Parent(CSTree &bt,CSTree p)    //找到结点p的父亲并返回
+{
+    CSTree l_result,r_result;
+    if (!bt||bt==p)
+        return NULL;
+    if (bt->firstchild==p||bt->nextsibling==p)
+        return bt;
+    else
+    {
+        l_result=Parent(bt->firstchild,p);
+        r_result=Parent(bt->nextsibling,p);
+        return l_result?l_result:(r_result?r_result:NULL);
+    }
+}
+
+CSTree search_name(CSTree &bt,char mingzi[])    //通过名字找到结点并返回
+{
+    CSTree l_result,r_result;
+    if(!bt)
+        return NULL;
+    if(strcmp(bt->data.name,mingzi)==0)
+        return bt;
+    else
+    {
+        l_result=search_name(bt->firstchild,mingzi);
+        r_result=search_name(bt->nextsibling,mingzi);
+        return l_result?l_result:(r_result?r_result:NULL);
+    }
+}
+
+void add(CSTree &bt)   //让一个结点拥有孩子或兄弟
+{
+    char na[20];
+    int i;
+    CSTree p;
+    Elemtype new_child;
+    printf("\n请输入打算有孩子或兄弟的那个人的名字：\n");
+    scanf("%s",&na);
+    p=search_name(bt,na);
+    printf("\n是有左孩子，还是右兄弟呢？左孩子请按1,右兄弟请按0：\n");
+    scanf("%d",&i);
+    switch(i)
+    {
+        case 1:
+            if(p->firstchild!=NULL)
+            {
+                printf("添加失败，该成员已经有左孩子了！\n");
+                break;
+            }
+            else
+            {
+                printf("\n请输入新成员的姓名：\n");
+                scanf("%s",&new_child.name);
+                new_left(p,new_child);
+            }
+            break;
+        case 2:
+            if(p->nextsibling!=NULL)
+            {
+                printf("\n添加失败！成员已经有右兄弟了！\n");
+                break;
+            }
+            else
+            {
+                printf("\n请输入新成员的姓名：\n");
+                scanf("%s",&new_child.name);
+                new_right(p,new_child);
+            }
+            break;
+        default:
+            printf("\n你的输入有误！\n");
+            break;
+    }
+}
+
+void delete_(CSTree &bt)    //删除一个结点和他的孩子们孙子们
+{
+    char mingzi[20];
+    CSTree p,q;
+    printf("请输入你想删除的那个成员的姓名，删除后他的子孙也将一起删除\n");
+    scanf("%s",mingzi);
+    p=search_name(bt,mingzi);
+    q=Parent(bt,p);
+    if(q!=NULL)
+    {
+        if(q->firstchild==p)
+        {
+            q->firstchild=NULL;
+            free(p);
+        }
+        if(q->nextsibling==p)
+        {
+            q->nextsibling=NULL;
+            free(p);
+        }
+    }
+    else
+    {
+        bt=NULL;
+    }
+}
+
+void update(CSTree &bt)    //修改成员信息
+{
+    char mingzi[20];
+    CSTree p;
+    printf("\n请输入你想修改孩子的姓名：\n");
+    scanf("%s",&mingzi);
+    p=search_name(bt,mingzi);
+    printf("请输入修改过后的姓名：\n");
+    scanf("%s",&p->data.name);
+	printf("请输入修改过后的辈分儿：\n");
+    scanf("%d",&p->data.generate);
+}
+
+void show(CSTree &bt)    //前序遍历展示整个家谱树
+{
+	CSTree s[30],p;
+	int top,bools;
+	p=bt;top=0;
+	bools=1;
+	do
+	{
+		while(p!=NULL)
+		{
+			printf("%s -> ",p->data.name);
+			top++;
+			s[top]=p;
+			p=p->firstchild;
+		}
+		if(top==0)
+			bools=0;
+		else
+		{
+			p=s[top];
+			top--;
+			p=p->nextsibling;
+		}	
+	}while(bools);
+}
+
+void main()
+{
+	CSTree bt;
+    int i;
+    printf("            欢迎来到家谱管理系统！");
+   do
+   {
+	  	printf("\n\n***************** 家谱管理系统 *******************\n");
+			printf("            1、新建家谱树                     \n");
+			printf("            2、查询成员信息                   \n");
+			printf("            3、添加家谱成员                   \n");
+			printf("            4、删除家谱成员                  \n");
+			printf("            5、修改成员信息                  \n");
+			printf("            6、显示家谱树                     \n");
+			printf("            0、退出                         \n");
+    printf("\n请输入你的选择:\n");
+    scanf("%d",&i);
+    switch(i)
+    {
+        case 1:
+            create(bt);
+			 show(bt);
+            break;
+        case 2:
+            search(bt);
+            break;
+        case 3:
+            add(bt);
+            show(bt);
+            break;
+        case 4:
+            delete_(bt);
+            show(bt);
+            break;
+        case 5:
+            update(bt);
+            show(bt);
+            break;
+	    case 6:
+			show(bt);
+            break;
+        case 0:
+            printf("谢谢你的使用，再见啦！\n");
+            exit(0);
+        default:
+            printf("你的输入有误，请重新输入！\n");
+            break;
+	}
+   }while(i!=0);
+}
